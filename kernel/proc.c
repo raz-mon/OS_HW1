@@ -9,7 +9,7 @@
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
-// Loving the bananas!@$#asdf
+
 struct proc *initproc;
 
 int nextpid = 1;
