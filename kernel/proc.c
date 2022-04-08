@@ -7,7 +7,7 @@
 #include "defs.h"
 
 struct cpu cpus[NCPU];
-
+// I love bananas :)
 struct proc proc[NPROC];
 
 struct proc *initproc;
