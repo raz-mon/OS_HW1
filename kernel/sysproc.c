@@ -83,6 +83,12 @@ sys_kill(void)
   return kill(pid);
 }
 
+uint64
+sys_kill_system(void)
+{
+  return kill_system();
+}
+
 // return how many clock tick interrupts have occurred
 // since start.
 uint64

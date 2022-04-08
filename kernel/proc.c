@@ -596,6 +596,32 @@ kill(int pid)
   return -1;
 }
 
+// Kill all processes, except the init process (pid=???) and the shell process(pid=???).
+int
+kill_system(void)
+{
+  // Initialize these variables with their corresponding values (find via gdb or printing).
+  int init_proc_pid;
+  int shell_proc_pid;
+  
+  struct proc *p;
+
+  for (p = proc; p < &proc[NPROC]; p++){
+    if (p->pid != init_proc_pid && p->pid != shell_proc_pid)
+      kill(pid);
+    }
+  return 0;
+  // ** return (-1) if there was an error -
+  // but what error can occur here? (pid not found for the regular kill function).
+}
+
+// Pause all user processes for the number of seconds specified by the second's integer parameter.
+int
+pause_system(void)
+{
+  
+}
+
 // Copy to either a user address, or kernel address,
 // depending on usr_dst.
 // Returns 0 on success, -1 on error.
