@@ -601,14 +601,15 @@ int
 kill_system(void)
 {
   // Initialize these variables with their corresponding values (find via gdb or printing).
-  int init_proc_pid;
-  int shell_proc_pid;
+  // Temporary (so we can run the program). Need to be initialized with proper pid's.
+  int init_proc_pid = 0;
+  int shell_proc_pid = 0;
   
   struct proc *p;
 
   for (p = proc; p < &proc[NPROC]; p++){
-    if (p->pid != init_proc_pid && p->pid != shell_proc_pid)
-      kill(pid);
+    if ((p->pid != init_proc_pid) && (p->pid != shell_proc_pid))
+      kill(p->pid);
     }
   return 0;
   // ** return (-1) if there was an error -
@@ -619,7 +620,8 @@ kill_system(void)
 int
 pause_system(void)
 {
-  
+  // TBD.
+  return 1;
 }
 
 // Copy to either a user address, or kernel address,
