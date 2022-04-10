@@ -86,7 +86,16 @@ sys_kill(void)
 uint64
 sys_pause(void)
 {
-  return pause_system();
+  // 2 options: Take care of it here (using ticks - probably should), or sending 'time_s' to 'kill_system' and take 
+  // care of the sys_call there.
+
+  int time_s;
+  // uint ticks0;
+
+  if(argint(0, &time_s) < 0)
+    return -1;
+  
+  return pause_system(time_s);
 }
 
 uint64

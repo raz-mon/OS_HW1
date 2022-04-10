@@ -618,9 +618,9 @@ kill_system(void)
 
 // Pause all user processes for the number of seconds specified by the second's integer parameter.
 int
-pause_system(void)
+pause_system(int time)
 {
-  // TBD.
+  // Make running processes RUNNABLE, and after time seconds - continue running. 
   return 0;
 }
 
