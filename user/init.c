@@ -37,6 +37,7 @@ main(void)
     }
 
     printf("init pid: %d", pid);
+    // Just a comment ;).
     
     for(;;){
       // this call to wait() returns if the shell exits,
