@@ -36,8 +36,8 @@ main(void)
       exit(1);
     }
 
-    printf("init pid: %d", pid);
-    // Just a comment ;).
+    printf("shell pid: %d", pid);
+    printf("init pid: %d\n", myproc()->pid);
     
     for(;;){
       // this call to wait() returns if the shell exits,
