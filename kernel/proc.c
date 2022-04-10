@@ -603,7 +603,7 @@ kill_system(void)
   // Initialize these variables with their corresponding values (find via gdb or printing).
   // Temporary (so we can run the program). Need to be initialized with proper pid's.
   int init_proc_pid = 0;
-  int shell_proc_pid = 0;
+  int shell_proc_pid = 2;
   
   struct proc *p;
 
@@ -621,7 +621,7 @@ int
 pause_system(void)
 {
   // TBD.
-  return 1;
+  return 0;
 }
 
 // Copy to either a user address, or kernel address,

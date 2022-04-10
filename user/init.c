@@ -36,8 +36,10 @@ main(void)
       exit(1);
     }
 
-    printf("shell pid: %d", pid);
-    printf("init pid: %d\n", myproc()->pid);
+    printf("shell pid: %d\n", pid);
+    struct proc *p = myproc();
+
+    printf("init pid: %d\n", p->pid);
     
     for(;;){
       // this call to wait() returns if the shell exits,
