@@ -84,7 +84,7 @@ sys_kill(void)
 }
 
 uint64
-sys_pause(void)
+sys_pause_system(void)
 {
   // 2 options: Take care of it here (using ticks - probably should), or sending 'time_s' to 'kill_system' and take 
   // care of the sys_call there.

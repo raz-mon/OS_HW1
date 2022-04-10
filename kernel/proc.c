@@ -26,6 +26,12 @@ extern char trampoline[]; // trampoline.S
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
 
+// flag which indicates if the system is 'paused'.
+// 0 -> Not paused. 1 -> Paused.
+int paused;
+int ticks_0;
+int pause_time;
+
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
@@ -447,7 +453,8 @@ scheduler(void)
 
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      if(p->state == RUNNABLE) {
+      paused = should_pause(); 
+      if(p->state == RUNNABLE && !paused) {
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
@@ -596,6 +603,25 @@ kill(int pid)
   return -1;
 }
 
+// Pause all user processes for the number of seconds specified by the second's integer parameter.
+int
+pause_system(int time)
+{
+  // Make running processes RUNNABLE, and after time seconds - continue running. 
+  pause_time = 10 * time;   // Pause_time in seconds (1 tick = 1/10 sec).
+  ticks_0 = ticks;
+  yield();                  // Change state to runnable, go to scheduler (via sched()). 
+  // Question - Is is important that we continue execution from this process? If so, may add another (global) flag..
+  return 0;
+}
+
+// Return 1 if should pause, 0 otherwise.
+int
+should_pause()
+{
+  return (ticks - ticks_0) > pause_time ? 0 : 1;
+}
+
 // Kill all processes, except the init process (pid=???) and the shell process(pid=???).
 int
 kill_system(void)
@@ -608,21 +634,14 @@ kill_system(void)
   struct proc *p;
 
   for (p = proc; p < &proc[NPROC]; p++){
-    if ((p->pid != init_proc_pid) && (p->pid != shell_proc_pid))
-      kill(p->pid);
+    if ((p->pid != init_proc_pid) && (p->pid != shell_proc_pid)){
+      if (kill(p->pid) < 0)
+        return -1;
     }
+  }
   return 0;
-  // ** return (-1) if there was an error -
-  // but what error can occur here? (pid not found for the regular kill function).
 }
 
-// Pause all user processes for the number of seconds specified by the second's integer parameter.
-int
-pause_system(int time)
-{
-  // Make running processes RUNNABLE, and after time seconds - continue running. 
-  return 0;
-}
 
 // Copy to either a user address, or kernel address,
 // depending on usr_dst.

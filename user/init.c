@@ -36,6 +36,7 @@ main(void)
       exit(1);
     }
 
+    printf("init pid: %d\n", getpid());
     printf("shell pid: %d\n", pid);
     
     // struct proc *p = myproc();
