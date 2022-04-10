@@ -36,6 +36,8 @@ main(void)
       exit(1);
     }
 
+    printf("init pid: %d", pid);
+    
     for(;;){
       // this call to wait() returns if the shell exits,
       // or if a parentless process exits.
