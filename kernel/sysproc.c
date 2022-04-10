@@ -84,6 +84,12 @@ sys_kill(void)
 }
 
 uint64
+sys_pause(void)
+{
+  return pause_system();
+}
+
+uint64
 sys_kill_system(void)
 {
   return kill_system();

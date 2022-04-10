@@ -37,4 +37,4 @@ entry("sbrk");
 entry("sleep");
 entry("uptime");
 entry("pause");
-entry("kill_all");
+# entry("kill_all");
