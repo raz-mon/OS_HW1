@@ -485,7 +485,7 @@ scheduler_sjf(void)
   struct proc *p;
   struct cpu *c = mycpu();
   struct proc *co = 0;
-  int min_mean_ticks = 1000000000;   // Large initial number.
+  int min_mean_ticks = __INT_MAX__;   // Large initial number.
 
   c->proc = 0;
   for(;;){
@@ -501,25 +501,31 @@ scheduler_sjf(void)
     for(p = proc; p < &proc[NPROC]; p++){
       acquire(&p->lock);
       if(p->state == RUNNABLE && (p->mean_ticks < min_mean_ticks)){
-	co = p;
-	min_mean_ticks = p->mean_ticks;
+	      co = p;
+	      min_mean_ticks = p->mean_ticks;
       }
       release(&p->lock);
     }
     if(co != 0){
       acquire(&co->lock);
       if(co->state==RUNNABLE){
-	p->state = RUNNING;
-	c->proc = co;
-	co->ticks_start = ticks;
-	swtch(&c->context, &co->context);
+        p->state = RUNNING;
+        c->proc = co;
+        co->ticks_start = ticks;
 
-	// Update fields
-	co->last_ticks = ticks - co->ticks_start;
-	co->mean_ticks = ((10-rate)*co->mean_ticks + co->last_ticks*rate)/10;
-    
-	// After return from process run.
-	c->proc = 0;
+        printf("proc switch: %d\n", co->pid);
+
+        swtch(&c->context, &co->context);
+
+        printf("proc got out from switch: %d\n", co->pid);
+
+
+        // Update fields
+        co->last_ticks = ticks - co->ticks_start;
+        co->mean_ticks = ((10-rate)*co->mean_ticks + co->last_ticks*rate)/10;
+          
+        // After return from process run.
+        c->proc = 0;
       }
       release(&co->lock);
     }
