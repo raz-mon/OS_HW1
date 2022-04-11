@@ -454,7 +454,7 @@ scheduler(void)
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       paused = should_pause(); 
-      if(p->state == RUNNABLE && !paused) {
+      if(p->state == RUNNABLE && paused==0) {
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
@@ -628,7 +628,7 @@ kill_system(void)
 {
   // Initialize these variables with their corresponding values (find via gdb or printing).
   // Temporary (so we can run the program). Need to be initialized with proper pid's.
-  int init_proc_pid = 0;
+  int init_proc_pid = 1;
   int shell_proc_pid = 2;
   
   struct proc *p;

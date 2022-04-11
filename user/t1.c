@@ -10,7 +10,7 @@ void example_pause_system(int interval, int pause_seconds, int loop_size) {
     }
     for (int i = 0; i < loop_size; i++) {
         if (i % interval == 0) {
-            printf("pause system %i/%i completed.\n", i, loop_size);
+            printf("pause system %d/%d completed.\n", i, loop_size);
         }
         if (i == loop_size / 2){
             pause_system(pause_seconds);
@@ -26,7 +26,7 @@ void example_kill_system(int interval, int loop_size) {
     }
     for (int i = 0; i < loop_size; i++) {
         if (i % interval == 0) {
-            printf("kill system %i/%i completed.\n", i, loop_size);
+            printf("kill system %d/%d completed.\n", i, loop_size);
         }
         if (i == loop_size / 2){
             kill_system();
@@ -36,11 +36,11 @@ void example_kill_system(int interval, int loop_size) {
 }
 
 int main(){
-    example_kill_system(5, 10);
+  example_kill_system(5, 10);
 
-    sleep(50);
+  // sleep(50);
 
-    example_pause_system(2, 4, 3);
+  // example_pause_system(2, 4, 3);
 
     return 1;
 }
