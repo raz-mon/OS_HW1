@@ -109,9 +109,9 @@ void            procdump(void);
 int             pause_system(int time_s);
 int             should_pause();
 int             kill_system(void);
-extern int paused;
-extern int ticks_0;
-extern int pause_time;
+extern int      paused;
+extern int      ticks_0;
+extern int      pause_time;
 
 // swtch.S
 void            swtch(struct context*, struct context*);

@@ -32,6 +32,8 @@ int paused;
 int ticks_0;
 int pause_time;
 
+int rate = 5;
+
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
@@ -125,7 +127,11 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-
+  p->ticks_start = 0;
+  p->last_ticks = 0;
+  p->mean_ticks = 0;
+  p->last_runnable_time = 0;
+  
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
     freeproc(p);
@@ -469,6 +475,65 @@ scheduler(void)
       release(&p->lock);
     }
   }
+}
+
+
+// Approximate sjf scheduler
+void
+scheduler_sjf(void)
+{
+  struct proc *p;
+  struct cpu *c = mycpu();
+  struct proc *co = 0;
+  int min_mean_ticks = 1000000000;   // Large initial number.
+
+  c->proc = 0;
+  for(;;){
+    // Avoid deadlock by ensuring that devices can interrupt.
+    intr_on();
+
+    // If system is paused, don't run any more processes until not paused.
+    int paused = should_pause();
+    while(paused==1){
+      ;;
+    }
+    // Find proc with minimum mean ticks.
+    for(p = proc; p < &proc[NPROC]; p++){
+      acquire(&p->lock);
+      if(p->state == RUNNABLE && (p->mean_ticks < min_mean_ticks)){
+	co = p;
+	min_mean_ticks = p->mean_ticks;
+      }
+      release(&p->lock);
+    }
+    if(co != 0){
+      acquire(&co->lock);
+      if(co->state==RUNNABLE){
+	p->state = RUNNING;
+	c->proc = co;
+	co->ticks_start = ticks;
+	swtch(&c->context, &co->context);
+
+	// Update fields
+	co->last_ticks = ticks - co->ticks_start;
+	co->mean_ticks = ((10-rate)*co->mean_ticks + co->last_ticks*rate)/10;
+    
+	// After return from process run.
+	c->proc = 0;
+      }
+      release(&co->lock);
+    }
+
+    // Notice that the pause_system sys_call still works!
+    
+  }
+}
+
+// First-Come-First-Serve scheduler
+void
+scheduler_fcfs(void)
+{
+  printf("TBD..");
 }
 
 // Switch to scheduler.  Must hold only p->lock
