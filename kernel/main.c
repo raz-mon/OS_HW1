@@ -47,5 +47,6 @@ main()
   schduler_fcfs();
   #ELSE
   scheduler();
+  #ENDIF
   
 }
