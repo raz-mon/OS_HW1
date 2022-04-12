@@ -511,13 +511,9 @@ scheduler_sjf(void)
         p->state = RUNNING;
         c->proc = co;
         co->ticks_start = ticks;
-
-        printf("proc switch: %d\n", co->pid);
-
+        // printf("proc switch: %d\n", co->pid);
         swtch(&c->context, &co->context);
-
-        printf("proc got out from switch: %d\n", co->pid);
-
+        // printf("proc got out from switch: %d\n", co->pid);
 
         // Update fields
         co->last_ticks = ticks - co->ticks_start;
