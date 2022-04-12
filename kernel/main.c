@@ -1,8 +1,28 @@
+
 #include "types.h"
 #include "param.h"
 #include "memlayout.h"
 #include "riscv.h"
 #include "defs.h"
+
+int a = 0;
+#ifdef SJF
+a = 1
+// scheduler_sjf();
+#endif
+#ifdef FCFS
+a = 2;
+// schduler_fcfs();
+#endif
+#ifdef DEFAULT
+a = 3;
+// scheduler();
+#endif
+
+#ifdef SCHEDFLAG
+a = 4;
+#endif
+
 
 volatile static int started = 0;
 
@@ -41,14 +61,36 @@ main()
     plicinithart();   // ask PLIC for device interrupts
   }
 
+  #ifdef SCHEDFLAG
+  print("policy known..\n");
+  #endif
+
   #ifdef SJF
-  scheduler_sjf();
+  print("entering shceduler_sjf()\n");
+  // scheduler_sjf();
   #endif
+
   #ifdef FCFS
-  schduler_fcfs();
+  print("entering shceduler_fcfs()\n");
+  // schduler_fcfs();
   #endif
+
   #ifdef DEFAULT
-  scheduler();
+  print("entering shceduler()\n");
+  // scheduler();
   #endif
+
+
+
+  #if 1
+  printf("party rock\n");
+  #endif
+
+  printf("a is : %d\n", a);
+  printf("entering scheduler..........\n");
+  scheduler();
+
+  
+
   
 }
