@@ -78,11 +78,11 @@ usertrap(void)
   int sched_scheme = 0;   // DEFAULT SCHEDULING (RR)
   #ifdef DEFAULT
   sched_scheme = 1;
-  #endif
+  #endif 
   
   // give up the CPU if this is a timer interrupt.  Addition (raz): Or paused=1.
   // If the sheduling scheme is not RR -> Don't yield due to timer interrupts.
-  if(sched_scheme==1 && (which_dev == 2 || paused==1))
+  if((which_dev == 2 || paused==1) && sched_scheme == 1)
     yield();
 
   usertrapret();
@@ -138,6 +138,10 @@ usertrapret(void)
 void 
 kerneltrap()
 {
+
+  //printf("Entered kernel trap\n");
+
+
   int which_dev = 0;
   uint64 sepc = r_sepc();
   uint64 sstatus = r_sstatus();
@@ -162,6 +166,9 @@ kerneltrap()
   // so restore trap registers for use by kernelvec.S's sepc instruction.
   w_sepc(sepc);
   w_sstatus(sstatus);
+
+
+  //printf("End kernel trap\n");
 }
 
 void

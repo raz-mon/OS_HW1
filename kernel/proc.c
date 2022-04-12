@@ -501,6 +501,7 @@ scheduler_sjf(void)
     for(p = proc; p < &proc[NPROC]; p++){
       acquire(&p->lock);
       if(p->state == RUNNABLE && (p->mean_ticks < min_mean_ticks)){
+        printf("proc %d: has mean ticks of: %d\n", p->pid, p->mean_ticks);
 	      co = p;
 	      min_mean_ticks = p->mean_ticks;
       }
