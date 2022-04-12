@@ -5,25 +5,6 @@
 #include "riscv.h"
 #include "defs.h"
 
-int a = 0;
-#ifdef SJF
-a = 1
-// scheduler_sjf();
-#endif
-#ifdef FCFS
-a = 2;
-// schduler_fcfs();
-#endif
-#ifdef DEFAULT
-a = 3;
-// scheduler();
-#endif
-
-#ifdef SCHEDFLAG
-a = 4;
-#endif
-
-
 volatile static int started = 0;
 
 // start() jumps here in supervisor mode on all CPUs.
@@ -62,35 +43,23 @@ main()
   }
 
   #ifdef SCHEDFLAG
-  print("policy known..\n");
+  printf("policy known..\n");
   #endif
 
   #ifdef SJF
-  print("entering shceduler_sjf()\n");
-  // scheduler_sjf();
+  printf("entering scheduler_sjf()\n");
+  scheduler_sjf();
   #endif
 
   #ifdef FCFS
-  print("entering shceduler_fcfs()\n");
-  // schduler_fcfs();
+  printf("entering scheduler_fcfs()\n");
+  scheduler_fcfs();
   #endif
 
   #ifdef DEFAULT
-  print("entering shceduler()\n");
-  // scheduler();
-  #endif
-
-
-
-  #if 1
-  printf("party rock\n");
-  #endif
-
-  printf("a is : %d\n", a);
-  printf("entering scheduler..........\n");
+  printf("entering scheduler()\n");
   scheduler();
-
-  
+  #endif
 
   
 }

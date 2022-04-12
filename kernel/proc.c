@@ -493,9 +493,9 @@ scheduler_sjf(void)
     intr_on();
 
     // If system is paused, don't run any more processes until not paused.
-    while(should_pause()==1){
-      ;;
-    }
+    // while(should_pause()==1){
+    //    ;;
+    // }
     // Find proc with minimum mean ticks.
     for(p = proc; p < &proc[NPROC]; p++){
       acquire(&p->lock);
@@ -511,9 +511,9 @@ scheduler_sjf(void)
         p->state = RUNNING;
         c->proc = co;
         co->ticks_start = ticks;
-        // printf("proc switch: %d\n", co->pid);
+        printf("proc switch from: %d\n", co->pid);
         swtch(&c->context, &co->context);
-        // printf("proc got out from switch: %d\n", co->pid);
+        printf("Finished running proc: %d\n", co->pid);
 
         // Update fields
         co->last_ticks = ticks - co->ticks_start;
@@ -535,6 +535,8 @@ void
 scheduler_fcfs(void)
 {
   printf("TBD..");
+  while(1)
+    ;;
 }
 
 // Switch to scheduler.  Must hold only p->lock
