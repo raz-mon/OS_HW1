@@ -493,8 +493,7 @@ scheduler_sjf(void)
     intr_on();
 
     // If system is paused, don't run any more processes until not paused.
-    int paused = should_pause();
-    while(paused==1){
+    while(should_pause()==1){
       ;;
     }
     // Find proc with minimum mean ticks.
