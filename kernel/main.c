@@ -40,7 +40,7 @@ main()
     trapinithart();   // install kernel trap vector
     plicinithart();   // ask PLIC for device interrupts
   }
-
+  printf("hello world\n");
   #ifdef SJF
   scheduler_sjf();
   #endif
@@ -50,5 +50,6 @@ main()
   #ifdef DEFAULT
   scheduler();
   #endif
-  
+
+  printf("hello world 1\n");
 }

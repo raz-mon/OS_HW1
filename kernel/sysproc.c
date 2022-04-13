@@ -94,7 +94,7 @@ sys_pause_system(void)
 
   if(argint(0, &time) < 0)
     return -1;
-  
+
   return pause_system(time);
 }
 

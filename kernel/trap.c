@@ -75,14 +75,19 @@ usertrap(void)
 
   if(p->killed)
     exit(-1);
+  
+  /*
   int sched_scheme = 0;   // DEFAULT SCHEDULING (RR)
   #ifdef DEFAULT
   sched_scheme = 1;
-  #endif 
-  
+  #endif
+  */
+
   // give up the CPU if this is a timer interrupt.  Addition (raz): Or paused=1.
   // If the sheduling scheme is not RR -> Don't yield due to timer interrupts.
-  if((which_dev == 2 || paused==1) && sched_scheme == 1)
+  
+  // if(sched_scheme==1 && (which_dev == 2 || paused==1))
+  if(which_dev == 2)
     yield();
 
   usertrapret();
@@ -159,7 +164,7 @@ kerneltrap()
   }
 
   // give up the CPU if this is a timer interrupt.
-  if((which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING) || paused==1)
+  if((which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING))
     yield();
 
   // the yield() may have caused some traps to occur,
