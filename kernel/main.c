@@ -1,3 +1,4 @@
+
 #include "types.h"
 #include "param.h"
 #include "memlayout.h"
@@ -40,16 +41,25 @@ main()
     trapinithart();   // install kernel trap vector
     plicinithart();   // ask PLIC for device interrupts
   }
-  printf("hello world\n");
+
+  #ifdef SCHEDFLAG
+  printf("policy known..\n");
+  #endif
+
   #ifdef SJF
+  printf("entering scheduler_sjf()\n");
   scheduler_sjf();
   #endif
+
   #ifdef FCFS
-  schduler_fcfs();
+  printf("entering scheduler_fcfs()\n");
+  scheduler_fcfs();
   #endif
+
   #ifdef DEFAULT
+  printf("entering scheduler()\n");
   scheduler();
   #endif
 
-  printf("hello world 1\n");
+  
 }

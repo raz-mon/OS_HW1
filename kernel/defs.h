@@ -96,7 +96,7 @@ struct proc*    myproc();
 void            procinit(void);
 void            scheduler(void) __attribute__((noreturn));
 void            scheduler_sjf(void) __attribute__((noreturn));
-void            schduler_fcfs(void) __attribute__((noreturn));
+void            scheduler_fcfs(void) __attribute__((noreturn));
 void            sched(void);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
@@ -112,6 +112,13 @@ int             kill_system(void);
 extern int      paused;
 extern int      ticks_0;
 extern int      pause_time;
+extern int      sleeping_processes_mean;
+extern int      runnable_processes_mean;
+extern int      running_processes_mean;
+extern int      number_of_proccesses;
+extern int      program_time;
+extern int      start_time;
+extern int      cpu_utilization;
 
 // swtch.S
 void            swtch(struct context*, struct context*);
