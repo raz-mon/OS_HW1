@@ -400,6 +400,11 @@ exit(int status)
 
   acquire(&wait_lock);
 
+  printf("running time: %d\n", p->running_time);
+  printf("runnable time: %d\n", p->runnable_time);
+  printf("sleeping time: %d\n", p->sleeping_time);
+
+
   // update statistics
   update_statistics(p);
   // Give any children to init.
@@ -855,8 +860,9 @@ procdump(void)
   }
 }
 
-void
+int
 print_stats(void){
   printf("Sleepig processes mean: %d\nRunning processes mean: %d\nRunnable processes mean:  %d\nProgram time: %d\nCPU utilization:  %d\n",
   sleeping_processes_mean, running_processes_mean, runnable_processes_mean, program_time, cpu_utilization);
+  return 0;
 }

@@ -137,8 +137,9 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
-	# $U/_syscall\
-	# $U/_env\
+	$U/_t1\
+	$U/_syscall\
+	$U/_env\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
