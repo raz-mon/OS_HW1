@@ -548,9 +548,9 @@ scheduler_sjf(void)
     }
     acquire(&co->lock);
     if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
-      p->runnable_time += ticks - p->condition_start_time;
-      p->state = RUNNING;
-      p->condition_start_time = ticks;
+      co->runnable_time += ticks - p->condition_start_time;
+      co->state = RUNNING;
+      co->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
       // printf("proc switch from: %d\n", co->pid);
@@ -599,9 +599,9 @@ scheduler_fcfs(void)
     }
     acquire(&co->lock);
     if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
-      p->runnable_time += ticks - p->condition_start_time;
-      p->state = RUNNING;
-      p->condition_start_time = ticks;
+      co->runnable_time += ticks - p->condition_start_time;
+      co->state = RUNNING;
+      co->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
       // printf("proc switch from: %d\n", co->pid);
