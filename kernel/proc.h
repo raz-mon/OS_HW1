@@ -100,6 +100,7 @@ struct proc {
   int sleeping_time;
   int runnable_time;
   int running_time;
+  int condition_start_time;     // Save start time of the current state's condition
 
   // wait_lock must be held when using this:
   struct proc *parent;         // Parent process

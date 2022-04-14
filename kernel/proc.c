@@ -38,6 +38,9 @@ int number_of_proccesses = 0;
 int program_time = 0;
 int start_time = 0;
 int cpu_utilization = 0;
+int sleeping_processes_mean = 0;
+int runnable_processes_mean = 0;
+int running_processes_mean = 0;
 
 int rate = 5;
 
@@ -142,6 +145,7 @@ found:
   p->sleeping_time = 0;
   p->runnable_time = 0;
   p->running_time = 0;
+  p->condition_start_time = 0;
   
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -490,7 +494,9 @@ scheduler(void)
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
+        p->runnable_time += ticks - p->last_runnable_time;
         p->state = RUNNING;
+        p->condition_start_time = ticks;
         c->proc = p;
         swtch(&c->context, &p->context);
 
@@ -523,18 +529,22 @@ scheduler_sjf(void)
     //    ;;
     // }
     // Find proc with minimum mean ticks.
+    int flag = 0;
     for(p = proc; p < &proc[NPROC]; p++){
       acquire(&p->lock);
       if(p->state == RUNNABLE && (p->mean_ticks < min_mean_ticks)){
         printf("proc %d: has mean ticks of: %d\n", p->pid, p->mean_ticks);
 	      co = p;
+        flag = 1;
 	      min_mean_ticks = p->mean_ticks;
       }
       release(&p->lock);
     }
     acquire(&co->lock);
-    if(co->state==RUNNABLE){
+    if(co->state==RUNNABLE && flag == 1){
+      p->runnable_time += ticks - p->last_runnable_time;
       p->state = RUNNING;
+      p->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
       printf("proc switch from: %d\n", co->pid);
@@ -567,18 +577,22 @@ scheduler_fcfs(void)
     // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
     int lowest_last_runnable_time = -1;   // Large initial number.
+    int flag = 0;                         // checks if co enterd the if statement
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       paused = should_pause(); 
       if(p->state == RUNNABLE && paused==0 && lowest_last_runnable_time < p->last_runnable_time) {
         co = p;
+        flag = 1;
         lowest_last_runnable_time = p->last_runnable_time;
       }
       release(&p->lock);
     }
     acquire(&co->lock);
-    if(co->state==RUNNABLE){
+    if(co->state==RUNNABLE && flag == 1){
+      p->runnable_time += ticks - p->last_runnable_time;
       p->state = RUNNING;
+      p->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
       printf("proc switch from: %d\n", co->pid);
@@ -624,6 +638,7 @@ yield(void)
 {
   struct proc *p = myproc();
   acquire(&p->lock);
+  p->running_time += ticks - p->condition_start_time;
   p->state = RUNNABLE;
   p->last_runnable_time = ticks;
   sched();
@@ -671,6 +686,7 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
+  p->condition_start_time = ticks;
 
   sched();
 
@@ -693,6 +709,7 @@ wakeup(void *chan)
     if(p != myproc()){
       acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
+        p->sleeping_time += ticks - p->condition_start_time;
         p->state = RUNNABLE;
         p->last_runnable_time = ticks;
       }
@@ -715,6 +732,7 @@ kill(int pid)
       p->killed = 1;
       if(p->state == SLEEPING){
         // Wake process from sleep().
+        p->sleeping_time += ticks - p->condition_start_time;
         p->state = RUNNABLE;
         p->last_runnable_time = ticks;
       }
