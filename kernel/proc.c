@@ -141,7 +141,7 @@ found:
   p->ticks_start = 0;
   p->last_ticks = 0;
   p->mean_ticks = 0;
-  p->last_runnable_time = 0;
+  p->last_runnable_time = ticks;
   p->sleeping_time = 0;
   p->runnable_time = 0;
   p->running_time = 0;
@@ -191,6 +191,15 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  // WE ADDED
+  p->mean_ticks = 0;
+  p->last_ticks = 0;
+  p->ticks_start = 0;
+  p->last_runnable_time = 0;
+  p->sleeping_time = 0;
+  p->runnable_time = 0;
+  p->running_time = 0;
+  p->condition_start_time = 0;     // Save start time of the current state's condition
 }
 
 // Create a user page table for a given process,
@@ -271,6 +280,7 @@ userinit(void)
 
   p->state = RUNNABLE;
   p->last_runnable_time = ticks;
+  p->condition_start_time = ticks;
 
   release(&p->lock);
 }
@@ -342,6 +352,7 @@ fork(void)
   acquire(&np->lock);
   np->state = RUNNABLE;
   np->last_runnable_time = ticks;
+  np->condition_start_time = ticks;
   release(&np->lock);
 
   return pid;
@@ -478,7 +489,7 @@ wait(uint64 addr)
 void
 scheduler(void)
 {
-  printf("hello world 2\n");
+  // printf("hello world 2\n");
   struct proc *p;
   struct cpu *c = mycpu();
   
@@ -489,12 +500,11 @@ scheduler(void)
 
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      paused = should_pause(); 
-      if(p->state == RUNNABLE && paused==0) {
+      if(p->state == RUNNABLE && should_pause() == 0) {
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
-        p->runnable_time += ticks - p->last_runnable_time;
+        p->runnable_time += ticks - p->condition_start_time;
         p->state = RUNNING;
         p->condition_start_time = ticks;
         c->proc = p;
@@ -517,23 +527,19 @@ scheduler_sjf(void)
   struct proc *p;
   struct cpu *c = mycpu();
   struct proc *co = proc;
-  int min_mean_ticks = __INT_MAX__;   // Large initial number.
 
   c->proc = 0;
   for(;;){
+    int min_mean_ticks = __INT_MAX__;   // Large initial number.
     // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
 
-    // If system is paused, don't run any more processes until not paused.
-    // while(should_pause()==1){
-    //    ;;
-    // }
     // Find proc with minimum mean ticks.
     int flag = 0;
     for(p = proc; p < &proc[NPROC]; p++){
       acquire(&p->lock);
       if(p->state == RUNNABLE && (p->mean_ticks < min_mean_ticks)){
-        printf("proc %d: has mean ticks of: %d\n", p->pid, p->mean_ticks);
+        // printf("proc %d: has mean ticks of: %d\n", p->pid, p->mean_ticks);
 	      co = p;
         flag = 1;
 	      min_mean_ticks = p->mean_ticks;
@@ -541,15 +547,15 @@ scheduler_sjf(void)
       release(&p->lock);
     }
     acquire(&co->lock);
-    if(co->state==RUNNABLE && flag == 1){
-      p->runnable_time += ticks - p->last_runnable_time;
+    if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
+      p->runnable_time += ticks - p->condition_start_time;
       p->state = RUNNING;
       p->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
-      printf("proc switch from: %d\n", co->pid);
+      // printf("proc switch from: %d\n", co->pid);
       swtch(&c->context, &co->context);
-      printf("Finished running proc: %d\n", co->pid);
+      // printf("Finished running proc: %d\n", co->pid);
 
       // Update fields
       co->last_ticks = ticks - co->ticks_start;
@@ -568,20 +574,23 @@ scheduler_sjf(void)
 void
 scheduler_fcfs(void)
 {
-  printf("Entered FCFS\n");
+  // printf("Entered FCFS\n");
   struct proc *p;
   struct cpu *c = mycpu();
   struct proc *co = proc;
   c->proc = 0;
+  int lowest_last_runnable_time;   // Large initial number.
+  int flag;                         // checks if co enterd the if statement
   for(;;){
     // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
-    int lowest_last_runnable_time = -1;   // Large initial number.
-    int flag = 0;                         // checks if co enterd the if statement
+
+    lowest_last_runnable_time = __INT16_MAX__;
+    flag = 0;
+
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      paused = should_pause(); 
-      if(p->state == RUNNABLE && paused==0 && lowest_last_runnable_time < p->last_runnable_time) {
+      if(p->state == RUNNABLE && lowest_last_runnable_time > p->last_runnable_time) {
         co = p;
         flag = 1;
         lowest_last_runnable_time = p->last_runnable_time;
@@ -589,15 +598,15 @@ scheduler_fcfs(void)
       release(&p->lock);
     }
     acquire(&co->lock);
-    if(co->state==RUNNABLE && flag == 1){
-      p->runnable_time += ticks - p->last_runnable_time;
+    if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
+      p->runnable_time += ticks - p->condition_start_time;
       p->state = RUNNING;
       p->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
-      printf("proc switch from: %d\n", co->pid);
+      // printf("proc switch from: %d\n", co->pid);
       swtch(&c->context, &co->context);
-      printf("Finished running proc: %d\n", co->pid);
+      // printf("Finished running proc: %d\n", co->pid);
       // After return from process run.
       c->proc = 0;
     }
@@ -685,6 +694,7 @@ sleep(void *chan, struct spinlock *lk)
 
   // Go to sleep.
   p->chan = chan;
+  p->running_time += ticks - p->condition_start_time;
   p->state = SLEEPING;
   p->condition_start_time = ticks;
 
@@ -711,6 +721,7 @@ wakeup(void *chan)
       if(p->state == SLEEPING && p->chan == chan) {
         p->sleeping_time += ticks - p->condition_start_time;
         p->state = RUNNABLE;
+        p->condition_start_time = ticks;
         p->last_runnable_time = ticks;
       }
       release(&p->lock);
@@ -734,6 +745,7 @@ kill(int pid)
         // Wake process from sleep().
         p->sleeping_time += ticks - p->condition_start_time;
         p->state = RUNNABLE;
+        p->condition_start_time = ticks;
         p->last_runnable_time = ticks;
       }
       release(&p->lock);
@@ -841,4 +853,10 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+void
+print_stats(void){
+  printf("Sleepig processes mean: %d\nRunning processes mean: %d\nRunnable processes mean:  %d\nProgram time: %d\nCPU utilization:  %d\n",
+  sleeping_processes_mean, running_processes_mean, runnable_processes_mean, program_time, cpu_utilization);
 }
