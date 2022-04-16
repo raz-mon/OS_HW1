@@ -400,9 +400,9 @@ exit(int status)
 
   acquire(&wait_lock);
 
-  printf("running time: %d\n", p->running_time);
-  printf("runnable time: %d\n", p->runnable_time);
-  printf("sleeping time: %d\n", p->sleeping_time);
+  // printf("running time: %d\n", p->running_time);
+  // printf("runnable time: %d\n", p->runnable_time);
+  // printf("sleeping time: %d\n", p->sleeping_time);
 
 
   // update statistics
@@ -432,7 +432,7 @@ update_statistics(struct proc *p){
   running_processes_mean = ((running_processes_mean * number_of_proccesses) + p->running_time) / (number_of_proccesses + 1);
   number_of_proccesses += 1;
   program_time += p->running_time;
-  cpu_utilization = program_time / (ticks - start_time);
+  cpu_utilization = program_time * 100 / (ticks - start_time);
 }
 
 // Wait for a child process to exit and return its pid.
