@@ -138,8 +138,13 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_t1\
+<<<<<<< HEAD
 	# $U/_syscall\
 	# $U/_env\
+=======
+	$U/_syscall\
+	$U/_env\
+>>>>>>> 16a362093766c74b1cb38788e205d9d7abb74b25
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

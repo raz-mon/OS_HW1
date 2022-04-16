@@ -400,6 +400,11 @@ exit(int status)
 
   acquire(&wait_lock);
 
+  printf("running time: %d\n", p->running_time);
+  printf("runnable time: %d\n", p->runnable_time);
+  printf("sleeping time: %d\n", p->sleeping_time);
+
+
   // update statistics
   update_statistics(p);
   // Give any children to init.

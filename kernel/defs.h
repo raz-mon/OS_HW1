@@ -111,6 +111,10 @@ int             should_pause();
 int             kill_system(void);
 int             print_stats(void);
 void            update_statistics(struct proc *p);
+<<<<<<< HEAD
+=======
+int             print_stats(void);
+>>>>>>> 16a362093766c74b1cb38788e205d9d7abb74b25
 extern int      paused;
 extern int      ticks_0;
 extern int      pause_time;
