@@ -37,7 +37,7 @@ void example_kill_system(int interval, int loop_size) {
 
 int main(){
   example_kill_system(5, 10);
-
+  print_stats();
   // sleep(50);
 
   // example_pause_system(2, 4, 3);

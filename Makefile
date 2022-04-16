@@ -137,6 +137,7 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	$U/_t1\
 	# $U/_syscall\
 	# $U/_env\
 

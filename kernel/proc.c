@@ -548,7 +548,7 @@ scheduler_sjf(void)
     }
     acquire(&co->lock);
     if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
-      co->runnable_time += ticks - p->condition_start_time;
+      co->runnable_time += ticks - co->condition_start_time;
       co->state = RUNNING;
       co->condition_start_time = ticks;
       c->proc = co;
@@ -599,7 +599,7 @@ scheduler_fcfs(void)
     }
     acquire(&co->lock);
     if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
-      co->runnable_time += ticks - p->condition_start_time;
+      co->runnable_time += ticks - co->condition_start_time;
       co->state = RUNNING;
       co->condition_start_time = ticks;
       c->proc = co;
@@ -855,8 +855,9 @@ procdump(void)
   }
 }
 
-void
+int
 print_stats(void){
   printf("Sleepig processes mean: %d\nRunning processes mean: %d\nRunnable processes mean:  %d\nProgram time: %d\nCPU utilization:  %d\n",
   sleeping_processes_mean, running_processes_mean, runnable_processes_mean, program_time, cpu_utilization);
+  return 0;
 }
