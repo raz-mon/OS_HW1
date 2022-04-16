@@ -41,8 +41,8 @@ main(int argc, char *argv[])
     for (int i = 0; i < n_forks; i++) {
         fork();
     }
-    int larges = 0;
-    int freqs = 0;
+    // int larges = 0;
+    // int freqs = 0;
     int n_experiments = 10;
     for (int i = 0; i < n_experiments; i++) {
         env_large(10, 3, 100);

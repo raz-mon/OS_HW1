@@ -143,10 +143,6 @@ usertrapret(void)
 void 
 kerneltrap()
 {
-
-  //printf("Entered kernel trap\n");
-
-
   int which_dev = 0;
   uint64 sepc = r_sepc();
   uint64 sstatus = r_sstatus();
@@ -171,9 +167,6 @@ kerneltrap()
   // so restore trap registers for use by kernelvec.S's sepc instruction.
   w_sepc(sepc);
   w_sstatus(sstatus);
-
-
-  //printf("End kernel trap\n");
 }
 
 void
