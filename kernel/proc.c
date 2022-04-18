@@ -138,6 +138,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+
+  // Our additions:
   p->ticks_start = 0;
   p->last_ticks = 0;
   p->mean_ticks = 0;
@@ -191,7 +193,8 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
-  // WE ADDED
+
+  // Our additions:
   p->mean_ticks = 0;
   p->last_ticks = 0;
   p->ticks_start = 0;
@@ -401,6 +404,7 @@ exit(int status)
   acquire(&wait_lock);
 
   // update statistics
+  p->running_time += ticks - p->condition_start_time;
   update_statistics(p);
   // Give any children to init.
   reparent(p);
@@ -555,14 +559,12 @@ scheduler_sjf(void)
 
       // Update fields
       co->last_ticks = ticks - co->ticks_start;
-      co->mean_ticks = ((10-rate)*co->mean_ticks + co->last_ticks*rate)/10;
+      co->mean_ticks = ((10-rate)*co->mean_ticks + rate*co->last_ticks)/10;
         
       // After return from process run.
       c->proc = 0;
     }
     release(&co->lock);
-    // Notice that the pause_system sys_call still works!
-    
   }
 }
 
@@ -598,7 +600,6 @@ scheduler_fcfs(void)
       co->state = RUNNING;
       co->condition_start_time = ticks;
       c->proc = co;
-      co->ticks_start = ticks;
       swtch(&c->context, &co->context);
       // After return from process run.
       c->proc = 0;
