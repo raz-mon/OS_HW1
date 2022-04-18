@@ -400,11 +400,6 @@ exit(int status)
 
   acquire(&wait_lock);
 
-  // printf("running time: %d\n", p->running_time);
-  // printf("runnable time: %d\n", p->runnable_time);
-  // printf("sleeping time: %d\n", p->sleeping_time);
-
-
   // update statistics
   update_statistics(p);
   // Give any children to init.
@@ -432,7 +427,7 @@ update_statistics(struct proc *p){
   running_processes_mean = ((running_processes_mean * number_of_proccesses) + p->running_time) / (number_of_proccesses + 1);
   number_of_proccesses += 1;
   program_time += p->running_time;
-  cpu_utilization = program_time * 100 / (ticks - start_time);
+  cpu_utilization = (program_time * 100) / (ticks - start_time);
 }
 
 // Wait for a child process to exit and return its pid.
@@ -494,7 +489,6 @@ wait(uint64 addr)
 void
 scheduler(void)
 {
-  // printf("hello world 2\n");
   struct proc *p;
   struct cpu *c = mycpu();
   
@@ -544,7 +538,6 @@ scheduler_sjf(void)
     for(p = proc; p < &proc[NPROC]; p++){
       acquire(&p->lock);
       if(p->state == RUNNABLE && (p->mean_ticks < min_mean_ticks)){
-        // printf("proc %d: has mean ticks of: %d\n", p->pid, p->mean_ticks);
 	      co = p;
         flag = 1;
 	      min_mean_ticks = p->mean_ticks;
@@ -558,9 +551,7 @@ scheduler_sjf(void)
       co->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
-      // printf("proc switch from: %d\n", co->pid);
       swtch(&c->context, &co->context);
-      // printf("Finished running proc: %d\n", co->pid);
 
       // Update fields
       co->last_ticks = ticks - co->ticks_start;
@@ -579,7 +570,6 @@ scheduler_sjf(void)
 void
 scheduler_fcfs(void)
 {
-  // printf("Entered FCFS\n");
   struct proc *p;
   struct cpu *c = mycpu();
   struct proc *co = proc;
@@ -609,9 +599,7 @@ scheduler_fcfs(void)
       co->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
-      // printf("proc switch from: %d\n", co->pid);
       swtch(&c->context, &co->context);
-      // printf("Finished running proc: %d\n", co->pid);
       // After return from process run.
       c->proc = 0;
     }
