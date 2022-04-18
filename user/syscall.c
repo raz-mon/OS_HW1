@@ -58,6 +58,14 @@ main(int argc, char *argv[])
     pause_system(5);
     printf("printing stats:\n");
     print_stats();
+
+    printf("killing system\n");
+    kill_system();
+
+    printf("now pausing again\n");
+    pause_system(5);
+    
+
     // pause_system_dem(10, 10, 100);
     // kill_system_dem(10, 100);
     exit(0);

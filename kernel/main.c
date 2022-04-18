@@ -42,10 +42,6 @@ main()
     plicinithart();   // ask PLIC for device interrupts
   }
 
-  #ifdef SCHEDFLAG
-  printf("policy known..\n");
-  #endif
-
   #ifdef SJF
   printf("entering scheduler_sjf()\n");
   scheduler_sjf();
