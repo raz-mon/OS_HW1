@@ -422,6 +422,7 @@ exit(int status)
 
 void
 update_statistics(struct proc *p){
+  p->running_time += ticks - p->condition_start_time;
   sleeping_processes_mean = ((sleeping_processes_mean * number_of_proccesses) + p->sleeping_time) / (number_of_proccesses + 1);
   runnable_processes_mean = ((runnable_processes_mean * number_of_proccesses) + p->runnable_time) / (number_of_proccesses + 1);
   running_processes_mean = ((running_processes_mean * number_of_proccesses) + p->running_time) / (number_of_proccesses + 1);
