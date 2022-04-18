@@ -1,0 +1,175 @@
+diff --git a/.vscode/c_cpp_properties.json b/.vscode/c_cpp_properties.json
+new file mode 100644
+index 0000000..862aed8
+--- /dev/null
++++ b/.vscode/c_cpp_properties.json
+@@ -0,0 +1,16 @@
++{
++    "configurations": [
++        {
++            "name": "Linux",
++            "includePath": [
++                "${workspaceFolder}/**"
++            ],
++            "defines": [],
++            "compilerPath": "/usr/bin/gcc",
++            "cStandard": "gnu17",
++            "cppStandard": "gnu++14",
++            "intelliSenseMode": "linux-gcc-x64"
++        }
++    ],
++    "version": 4
++}
+\ No newline at end of file
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+new file mode 100644
+index 0000000..2f57251
+--- /dev/null
++++ b/.vscode/settings.json
+@@ -0,0 +1,7 @@
++{
++    "files.associations": {
++        "proc.h": "c",
++        "defs.h": "c",
++        "cstdlib": "c"
++    }
++}
+\ No newline at end of file
+diff --git a/kernel/defs.h b/kernel/defs.h
+index a8f061b..8bb2bf9 100644
+--- a/kernel/defs.h
++++ b/kernel/defs.h
+@@ -109,6 +109,7 @@ void            procdump(void);
+ int             pause_system(int time_s);
+ int             should_pause();
+ int             kill_system(void);
++int             print_stats(void);
+ void            update_statistics(struct proc *p);
+ int             print_stats(void);
+ extern int      paused;
+diff --git a/kernel/param.h b/kernel/param.h
+index b5fdcb2..7852ddb 100644
+--- a/kernel/param.h
++++ b/kernel/param.h
+@@ -1,5 +1,5 @@
+ #define NPROC        64  // maximum number of processes
+-#define NCPU          8  // maximum number of CPUs
++#define NCPU          1  // maximum number of CPUs
+ #define NOFILE       16  // open files per process
+ #define NFILE       100  // open files per system
+ #define NINODE       50  // maximum number of active i-nodes
+diff --git a/kernel/proc.c b/kernel/proc.c
+index 7174536..baff7a9 100644
+--- a/kernel/proc.c
++++ b/kernel/proc.c
+@@ -138,8 +138,6 @@ allocproc(void)
+ found:
+   p->pid = allocpid();
+   p->state = USED;
+-
+-  // Our additions:
+   p->ticks_start = 0;
+   p->last_ticks = 0;
+   p->mean_ticks = 0;
+@@ -193,8 +191,7 @@ freeproc(struct proc *p)
+   p->killed = 0;
+   p->xstate = 0;
+   p->state = UNUSED;
+-
+-  // Our additions:
++  // WE ADDED
+   p->mean_ticks = 0;
+   p->last_ticks = 0;
+   p->ticks_start = 0;
+@@ -404,7 +401,6 @@ exit(int status)
+   acquire(&wait_lock);
+ 
+   // update statistics
+-  p->running_time += ticks - p->condition_start_time;
+   update_statistics(p);
+   // Give any children to init.
+   reparent(p);
+@@ -426,6 +422,7 @@ exit(int status)
+ 
+ void
+ update_statistics(struct proc *p){
++  p->running_time += ticks - p->condition_start_time;
+   sleeping_processes_mean = ((sleeping_processes_mean * number_of_proccesses) + p->sleeping_time) / (number_of_proccesses + 1);
+   runnable_processes_mean = ((runnable_processes_mean * number_of_proccesses) + p->runnable_time) / (number_of_proccesses + 1);
+   running_processes_mean = ((running_processes_mean * number_of_proccesses) + p->running_time) / (number_of_proccesses + 1);
+@@ -559,12 +556,14 @@ scheduler_sjf(void)
+ 
+       // Update fields
+       co->last_ticks = ticks - co->ticks_start;
+-      co->mean_ticks = ((10-rate)*co->mean_ticks + rate*co->last_ticks)/10;
++      co->mean_ticks = ((10-rate)*co->mean_ticks + co->last_ticks*rate)/10;
+         
+       // After return from process run.
+       c->proc = 0;
+     }
+     release(&co->lock);
++    // Notice that the pause_system sys_call still works!
++    
+   }
+ }
+ 
+diff --git a/user/env.c b/user/env.c
+index 30afcfd..ca14c0e 100644
+--- a/user/env.c
++++ b/user/env.c
+@@ -9,8 +9,8 @@
+ #include "kernel/riscv.h"
+ 
+ int loop_size = 10000;
+-int large_interval = 1000;
+-int large_size = 1000;
++int large_interval = 1000000;
++int large_size = 1000000;
+ int freq_interval = 100;
+ int freq_size = 100;
+ 
+@@ -37,7 +37,7 @@ int
+ main(int argc, char *argv[])
+ {
+     int n_forks = 2;
+-    int pid = getpid();
++    // int pid = getpid();
+     for (int i = 0; i < n_forks; i++) {
+         fork();
+     }
+@@ -45,23 +45,23 @@ main(int argc, char *argv[])
+     // int freqs = 0;
+     int n_experiments = 10;
+     for (int i = 0; i < n_experiments; i++) {
+-        env_large(10, 3, 100);
+-        if (pid == getpid()) {
+-            printf("experiment %d/%d\n", i + 1, n_experiments);
+-            print_stats();
++        env_large();
++        //if (pid == getpid()) {
++            // printf("experiment %d/%d\n", i + 1, n_experiments);
++            // print_stats();
+             //larges = (larges * i + get_utilization()) / (i + 1);
+-        }
+-        sleep(10);
+-        env_freq(10, 100);
+-        if (pid == getpid()) {
+-            print_stats();
+-            //freqs = (freqs * i + get_utilization()) / (i + 1);
+-        }
++        //}
++        // sleep(10);
++        // env_freq(10, 100);
++        // if (pid == getpid()) {
++        //    print_stats();
++        //     //freqs = (freqs * i + get_utilization()) / (i + 1);
++        // }
+     }
+     // if (pid == getpid()) {
+     //     printf("larges = %d\nfreqs = %d\n", larges, freqs);
+     // }
+-    printf("print stats: \n");
++    // printf("print stats: \n");
+     print_stats();
+     exit(0);
+ }
