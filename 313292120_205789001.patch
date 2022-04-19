@@ -119,7 +119,7 @@ index b5fdcb2..7852ddb 100644
  #define NFILE       100  // open files per system
  #define NINODE       50  // maximum number of active i-nodes
 diff --git a/kernel/proc.c b/kernel/proc.c
-index 22e7ce4..baff7a9 100644
+index 22e7ce4..f54f811 100644
 --- a/kernel/proc.c
 +++ b/kernel/proc.c
 @@ -26,6 +26,24 @@ extern char trampoline[]; // trampoline.S
@@ -184,7 +184,7 @@ index 22e7ce4..baff7a9 100644
 +  p->sleeping_time = 0;
 +  p->runnable_time = 0;
 +  p->running_time = 0;
-+  p->condition_start_time = 0;     // Save start time of the current state's condition
++  p->condition_start_time = 0;     // Save start time of the current state.
  }
  
  // Create a user page table for a given process,
@@ -248,11 +248,10 @@ index 22e7ce4..baff7a9 100644
          c->proc = p;
          swtch(&c->context, &p->context);
  
-@@ -464,6 +519,94 @@ scheduler(void)
+@@ -464,6 +519,97 @@ scheduler(void)
    }
  }
  
-+
 +// Approximate sjf scheduler
 +void
 +scheduler_sjf(void)
@@ -260,15 +259,16 @@ index 22e7ce4..baff7a9 100644
 +  struct proc *p;
 +  struct cpu *c = mycpu();
 +  struct proc *co = proc;
++  int flag;
 +
 +  c->proc = 0;
 +  for(;;){
-+    int min_mean_ticks = __INT_MAX__;   // Large initial number.
++    int min_mean_ticks = __INT_MAX__;   // Large initial number (ensure switching).
 +    // Avoid deadlock by ensuring that devices can interrupt.
 +    intr_on();
 +
 +    // Find proc with minimum mean ticks.
-+    int flag = 0;
++    flag = 0;
 +    for(p = proc; p < &proc[NPROC]; p++){
 +      acquire(&p->lock);
 +      if(p->state == RUNNABLE && (p->mean_ticks < min_mean_ticks)){
@@ -278,6 +278,7 @@ index 22e7ce4..baff7a9 100644
 +      }
 +      release(&p->lock);
 +    }
++    // Give the chosen process cpu-time.
 +    acquire(&co->lock);
 +    if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
 +      co->runnable_time += ticks - co->condition_start_time;
@@ -285,9 +286,9 @@ index 22e7ce4..baff7a9 100644
 +      co->condition_start_time = ticks;
 +      c->proc = co;
 +      co->ticks_start = ticks;
++
 +      swtch(&c->context, &co->context);
 +
-+      // Update fields
 +      co->last_ticks = ticks - co->ticks_start;
 +      co->mean_ticks = ((10-rate)*co->mean_ticks + co->last_ticks*rate)/10;
 +        
@@ -295,8 +296,6 @@ index 22e7ce4..baff7a9 100644
 +      c->proc = 0;
 +    }
 +    release(&co->lock);
-+    // Notice that the pause_system sys_call still works!
-+    
 +  }
 +}
 +
@@ -308,13 +307,14 @@ index 22e7ce4..baff7a9 100644
 +  struct cpu *c = mycpu();
 +  struct proc *co = proc;
 +  c->proc = 0;
-+  int lowest_last_runnable_time;   // Large initial number.
++  int lowest_last_runnable_time;   // Large initial number (ensure switch).
 +  int flag;                         // checks if co enterd the if statement
++  
 +  for(;;){
 +    // Avoid deadlock by ensuring that devices can interrupt.
 +    intr_on();
 +
-+    lowest_last_runnable_time = __INT16_MAX__;
++    lowest_last_runnable_time = __INT_MAX__;
 +    flag = 0;
 +
 +    for(p = proc; p < &proc[NPROC]; p++) {
@@ -326,14 +326,17 @@ index 22e7ce4..baff7a9 100644
 +      }
 +      release(&p->lock);
 +    }
++    // Give chosen process cpu-time.
 +    acquire(&co->lock);
 +    if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
 +      co->runnable_time += ticks - co->condition_start_time;
 +      co->state = RUNNING;
 +      co->condition_start_time = ticks;
 +      c->proc = co;
++
 +      swtch(&c->context, &co->context);
-+      // After return from process run.
++
++      // After return from process.
 +      c->proc = 0;
 +    }
 +    release(&co->lock);
@@ -343,7 +346,7 @@ index 22e7ce4..baff7a9 100644
  // Switch to scheduler.  Must hold only p->lock
  // and have changed proc->state. Saves and restores
  // intena because intena is a property of this
-@@ -497,7 +640,9 @@ yield(void)
+@@ -497,7 +643,9 @@ yield(void)
  {
    struct proc *p = myproc();
    acquire(&p->lock);
@@ -353,7 +356,7 @@ index 22e7ce4..baff7a9 100644
    sched();
    release(&p->lock);
  }
-@@ -542,7 +687,9 @@ sleep(void *chan, struct spinlock *lk)
+@@ -542,7 +690,9 @@ sleep(void *chan, struct spinlock *lk)
  
    // Go to sleep.
    p->chan = chan;
@@ -363,7 +366,7 @@ index 22e7ce4..baff7a9 100644
  
    sched();
  
-@@ -565,7 +712,10 @@ wakeup(void *chan)
+@@ -565,7 +715,10 @@ wakeup(void *chan)
      if(p != myproc()){
        acquire(&p->lock);
        if(p->state == SLEEPING && p->chan == chan) {
@@ -374,7 +377,7 @@ index 22e7ce4..baff7a9 100644
        }
        release(&p->lock);
      }
-@@ -586,7 +736,10 @@ kill(int pid)
+@@ -586,7 +739,10 @@ kill(int pid)
        p->killed = 1;
        if(p->state == SLEEPING){
          // Wake process from sleep().
@@ -385,7 +388,7 @@ index 22e7ce4..baff7a9 100644
        }
        release(&p->lock);
        return 0;
-@@ -596,6 +749,46 @@ kill(int pid)
+@@ -596,6 +752,42 @@ kill(int pid)
    return -1;
  }
  
@@ -393,11 +396,9 @@ index 22e7ce4..baff7a9 100644
 +int
 +pause_system(int time)
 +{
-+  // Make running processes RUNNABLE, and after time seconds - continue running. 
 +  pause_time = 10 * time;   // Pause_time in seconds (1 tick = 1/10 sec).
 +  ticks_0 = ticks;
-+  yield();                  // Change state to runnable, go to scheduler (via sched()). 
-+  // Question - Is is important that we continue execution from this process? If so, may add another (global) flag..
++  yield();                  // Change state to runnable, go to scheduler (via sched()).
 +  return 0;
 +}
 +
@@ -412,8 +413,6 @@ index 22e7ce4..baff7a9 100644
 +int
 +kill_system(void)
 +{
-+  // Initialize these variables with their corresponding values (find via gdb or printing).
-+  // Temporary (so we can run the program). Need to be initialized with proper pid's.
 +  int init_proc_pid = 1;
 +  int shell_proc_pid = 2;
 +  
@@ -432,7 +431,7 @@ index 22e7ce4..baff7a9 100644
  // Copy to either a user address, or kernel address,
  // depending on usr_dst.
  // Returns 0 on success, -1 on error.
-@@ -654,3 +847,10 @@ procdump(void)
+@@ -654,3 +846,10 @@ procdump(void)
      printf("\n");
    }
  }
@@ -577,25 +576,14 @@ index e8bcda9..fed1b73 100644
  // since start.
  uint64
 diff --git a/kernel/trap.c b/kernel/trap.c
-index a63249e..58e6d2e 100644
+index a63249e..0b255f3 100644
 --- a/kernel/trap.c
 +++ b/kernel/trap.c
-@@ -75,10 +75,21 @@ usertrap(void)
- 
-   if(p->killed)
+@@ -77,8 +77,12 @@ usertrap(void)
      exit(-1);
--
--  // give up the CPU if this is a timer interrupt.
-+  
-+  /*
-+  int sched_scheme = 0;   // DEFAULT SCHEDULING (RR)
-+  #ifdef DEFAULT
-+  sched_scheme = 1;
-+  #endif
-+  */
-+
-+  // give up the CPU if this is a timer interrupt.  Addition (raz): Or paused=1.
-+  // If the sheduling scheme is not RR -> Don't yield due to timer interrupts.
+ 
+   // give up the CPU if this is a timer interrupt.
++  // Added: If the sheduling scheme is not DEFAULT -> Don't yield due to timer interrupts.
 +  
 +  #ifdef DEFAULT
    if(which_dev == 2)
@@ -604,7 +592,7 @@ index a63249e..58e6d2e 100644
  
    usertrapret();
  }
-@@ -150,7 +161,7 @@ kerneltrap()
+@@ -150,7 +154,7 @@ kerneltrap()
    }
  
    // give up the CPU if this is a timer interrupt.
