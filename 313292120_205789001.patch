@@ -577,10 +577,10 @@ index e8bcda9..fed1b73 100644
  // since start.
  uint64
 diff --git a/kernel/trap.c b/kernel/trap.c
-index a63249e..ff36a0f 100644
+index a63249e..58e6d2e 100644
 --- a/kernel/trap.c
 +++ b/kernel/trap.c
-@@ -75,8 +75,18 @@ usertrap(void)
+@@ -75,10 +75,21 @@ usertrap(void)
  
    if(p->killed)
      exit(-1);
@@ -597,11 +597,14 @@ index a63249e..ff36a0f 100644
 +  // give up the CPU if this is a timer interrupt.  Addition (raz): Or paused=1.
 +  // If the sheduling scheme is not RR -> Don't yield due to timer interrupts.
 +  
-+  // if(sched_scheme==1 && (which_dev == 2 || paused==1))
++  #ifdef DEFAULT
    if(which_dev == 2)
      yield();
++  #endif
  
-@@ -150,7 +160,7 @@ kerneltrap()
+   usertrapret();
+ }
+@@ -150,7 +161,7 @@ kerneltrap()
    }
  
    // give up the CPU if this is a timer interrupt.
