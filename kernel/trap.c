@@ -86,9 +86,11 @@ usertrap(void)
   // give up the CPU if this is a timer interrupt.  Addition (raz): Or paused=1.
   // If the sheduling scheme is not RR -> Don't yield due to timer interrupts.
   
-  // if(sched_scheme==1 && (which_dev == 2 || paused==1))
+  #ifdef DEFAULT
+  printf("..........\n");
   if(which_dev == 2)
     yield();
+  #endif
 
   usertrapret();
 }
