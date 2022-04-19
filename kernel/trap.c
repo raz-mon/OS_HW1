@@ -87,7 +87,6 @@ usertrap(void)
   // If the sheduling scheme is not RR -> Don't yield due to timer interrupts.
   
   #ifdef DEFAULT
-  printf("..........\n");
   if(which_dev == 2)
     yield();
   #endif
