@@ -75,16 +75,9 @@ usertrap(void)
 
   if(p->killed)
     exit(-1);
-  
-  /*
-  int sched_scheme = 0;   // DEFAULT SCHEDULING (RR)
-  #ifdef DEFAULT
-  sched_scheme = 1;
-  #endif
-  */
 
-  // give up the CPU if this is a timer interrupt.  Addition (raz): Or paused=1.
-  // If the sheduling scheme is not RR -> Don't yield due to timer interrupts.
+  // give up the CPU if this is a timer interrupt.
+  // Added: If the sheduling scheme is not DEFAULT -> Don't yield due to timer interrupts.
   
   #ifdef DEFAULT
   if(which_dev == 2)

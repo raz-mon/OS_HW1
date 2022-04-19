@@ -199,7 +199,7 @@ freeproc(struct proc *p)
   p->sleeping_time = 0;
   p->runnable_time = 0;
   p->running_time = 0;
-  p->condition_start_time = 0;     // Save start time of the current state's condition
+  p->condition_start_time = 0;     // Save start time of the current state.
 }
 
 // Create a user page table for a given process,
@@ -519,7 +519,6 @@ scheduler(void)
   }
 }
 
-
 // Approximate sjf scheduler
 void
 scheduler_sjf(void)
@@ -527,15 +526,16 @@ scheduler_sjf(void)
   struct proc *p;
   struct cpu *c = mycpu();
   struct proc *co = proc;
+  int flag;
 
   c->proc = 0;
   for(;;){
-    int min_mean_ticks = __INT_MAX__;   // Large initial number.
+    int min_mean_ticks = __INT_MAX__;   // Large initial number (ensure switching).
     // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
 
     // Find proc with minimum mean ticks.
-    int flag = 0;
+    flag = 0;
     for(p = proc; p < &proc[NPROC]; p++){
       acquire(&p->lock);
       if(p->state == RUNNABLE && (p->mean_ticks < min_mean_ticks)){
@@ -545,6 +545,7 @@ scheduler_sjf(void)
       }
       release(&p->lock);
     }
+    // Give the chosen process cpu-time.
     acquire(&co->lock);
     if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
       co->runnable_time += ticks - co->condition_start_time;
@@ -552,9 +553,9 @@ scheduler_sjf(void)
       co->condition_start_time = ticks;
       c->proc = co;
       co->ticks_start = ticks;
+
       swtch(&c->context, &co->context);
 
-      // Update fields
       co->last_ticks = ticks - co->ticks_start;
       co->mean_ticks = ((10-rate)*co->mean_ticks + co->last_ticks*rate)/10;
         
@@ -562,8 +563,6 @@ scheduler_sjf(void)
       c->proc = 0;
     }
     release(&co->lock);
-    // Notice that the pause_system sys_call still works!
-    
   }
 }
 
@@ -575,13 +574,14 @@ scheduler_fcfs(void)
   struct cpu *c = mycpu();
   struct proc *co = proc;
   c->proc = 0;
-  int lowest_last_runnable_time;   // Large initial number.
+  int lowest_last_runnable_time;   // Large initial number (ensure switch).
   int flag;                         // checks if co enterd the if statement
+  
   for(;;){
     // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
 
-    lowest_last_runnable_time = __INT16_MAX__;
+    lowest_last_runnable_time = __INT_MAX__;
     flag = 0;
 
     for(p = proc; p < &proc[NPROC]; p++) {
@@ -593,14 +593,17 @@ scheduler_fcfs(void)
       }
       release(&p->lock);
     }
+    // Give chosen process cpu-time.
     acquire(&co->lock);
     if(co->state==RUNNABLE && flag == 1 && should_pause() == 0){
       co->runnable_time += ticks - co->condition_start_time;
       co->state = RUNNING;
       co->condition_start_time = ticks;
       c->proc = co;
+
       swtch(&c->context, &co->context);
-      // After return from process run.
+
+      // After return from process.
       c->proc = 0;
     }
     release(&co->lock);
@@ -753,11 +756,9 @@ kill(int pid)
 int
 pause_system(int time)
 {
-  // Make running processes RUNNABLE, and after time seconds - continue running. 
   pause_time = 10 * time;   // Pause_time in seconds (1 tick = 1/10 sec).
   ticks_0 = ticks;
-  yield();                  // Change state to runnable, go to scheduler (via sched()). 
-  // Question - Is is important that we continue execution from this process? If so, may add another (global) flag..
+  yield();                  // Change state to runnable, go to scheduler (via sched()).
   return 0;
 }
 
@@ -772,8 +773,6 @@ should_pause()
 int
 kill_system(void)
 {
-  // Initialize these variables with their corresponding values (find via gdb or printing).
-  // Temporary (so we can run the program). Need to be initialized with proper pid's.
   int init_proc_pid = 1;
   int shell_proc_pid = 2;
   
