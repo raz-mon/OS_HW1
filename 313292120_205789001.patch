@@ -576,7 +576,7 @@ index e8bcda9..fed1b73 100644
  // since start.
  uint64
 diff --git a/kernel/trap.c b/kernel/trap.c
-index a63249e..0b255f3 100644
+index a63249e..97207f9 100644
 --- a/kernel/trap.c
 +++ b/kernel/trap.c
 @@ -77,8 +77,12 @@ usertrap(void)
@@ -592,18 +592,24 @@ index a63249e..0b255f3 100644
  
    usertrapret();
  }
-@@ -150,7 +154,7 @@ kerneltrap()
+@@ -149,9 +153,12 @@ kerneltrap()
+     panic("kerneltrap");
    }
  
-   // give up the CPU if this is a timer interrupt.
+-  // give up the CPU if this is a timer interrupt.
 -  if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
++  // give up the CPU if this is a timer interrupt. 
++  // Added: IF the scheduling sheme is DEFAULT (RR).
++  #ifdef DEFAULT
 +  if((which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING))
      yield();
++  #endif
  
    // the yield() may have caused some traps to occur,
+   // so restore trap registers for use by kernelvec.S's sepc instruction.
 diff --git a/user/env.c b/user/env.c
 new file mode 100644
-index 0000000..ca14c0e
+index 0000000..072eddb
 --- /dev/null
 +++ b/user/env.c
 @@ -0,0 +1,128 @@
@@ -645,7 +651,7 @@ index 0000000..ca14c0e
 +int
 +main(int argc, char *argv[])
 +{
-+    int n_forks = 2;
++    int n_forks = 5;
 +    // int pid = getpid();
 +    for (int i = 0; i < n_forks; i++) {
 +        fork();
@@ -755,10 +761,10 @@ index e0a5689..a62f0a0 100644
        // or if a parentless process exits.
 diff --git a/user/syscall.c b/user/syscall.c
 new file mode 100644
-index 0000000..64887d2
+index 0000000..742025c
 --- /dev/null
 +++ b/user/syscall.c
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,73 @@
 +#include "kernel/param.h"
 +#include "kernel/types.h"
 +#include "kernel/stat.h"
@@ -815,6 +821,7 @@ index 0000000..64887d2
 +main(int argc, char *argv[])
 +{
 +    // set_economic_mode_dem(10, 100);
++    /*
 +    printf("pausing for 5 seconds...\n");
 +    pause_system(5);
 +    printf("printing stats:\n");
@@ -825,10 +832,10 @@ index 0000000..64887d2
 +
 +    printf("now pausing again\n");
 +    pause_system(5);
-+    
++    */
 +
-+    // pause_system_dem(10, 10, 100);
-+    // kill_system_dem(10, 100);
++    pause_system_dem(10, 10, 100);
++    kill_system_dem(10, 100);
 +    exit(0);
 +}
 \ No newline at end of file
