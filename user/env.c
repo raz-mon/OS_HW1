@@ -36,7 +36,7 @@ void env_freq() {
 int
 main(int argc, char *argv[])
 {
-    int n_forks = 2;
+    int n_forks = 5;
     // int pid = getpid();
     for (int i = 0; i < n_forks; i++) {
         fork();

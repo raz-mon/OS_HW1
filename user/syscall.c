@@ -54,6 +54,7 @@ int
 main(int argc, char *argv[])
 {
     // set_economic_mode_dem(10, 100);
+    /*
     printf("pausing for 5 seconds...\n");
     pause_system(5);
     printf("printing stats:\n");
@@ -64,9 +65,9 @@ main(int argc, char *argv[])
 
     printf("now pausing again\n");
     pause_system(5);
-    
+    */
 
-    // pause_system_dem(10, 10, 100);
-    // kill_system_dem(10, 100);
+    pause_system_dem(10, 10, 100);
+    kill_system_dem(10, 100);
     exit(0);
 }
