@@ -646,6 +646,7 @@ yield(void)
   p->running_time += ticks - p->condition_start_time;
   p->state = RUNNABLE;
   p->last_runnable_time = ticks;
+  p->condition_start_time = ticks;
   sched();
   release(&p->lock);
 }
