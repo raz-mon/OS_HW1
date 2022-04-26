@@ -770,7 +770,7 @@ should_pause()
   return (ticks - ticks_0) > pause_time ? 0 : 1;
 }
 
-// Kill all processes, except the init process (pid=???) and the shell process(pid=???).
+// Kill all processes, except the init process (pid=1) and the shell process(pid=2).
 int
 kill_system(void)
 {
